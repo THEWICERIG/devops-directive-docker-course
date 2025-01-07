@@ -15,8 +15,10 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # clean install (ci) of only production 
-# dependencies
-RUN npm ci --only=production
+# dependencies, setting up a cache too
+RUN --mount=type=cache,target=/usr/src/app/.npm \
+    npm set cache /usr/src/app/.npm && \
+    npm ci --only=production
 
 # execute as non-root user for security
 # the node buo;d has built in user 'node'
@@ -25,6 +27,11 @@ USER node
 # now copy only source code directory.
 # assign everything to user 'node'
 COPY --chown=node:node ./src .
+
+# set port to 3000, although this is seen
+# in the code, restating it in the dockerfile
+# can be seen as good documentation
+EXPOSE 3000
 
 # run the command 'node index.js' upon launch of 
 # image
