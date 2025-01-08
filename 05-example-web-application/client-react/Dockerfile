@@ -1,8 +1,8 @@
-# from 1:59:15
+# from 2:03:26
 
 # Using bullseye, which is bigger than alpine
 # but we will jsut use it for build
-FROM node:23-bullseye as build
+FROM node:23-bullseye AS build
 
 # set work directory on iamge
 WORKDIR /usr/src/app
@@ -24,8 +24,8 @@ RUN npm run build
 
 ###
 
-# using nginx for release
-FROM nginx:1.27.3-alpine
+# using nginx unprivileged for release so we can use non-root user
+FROM nginxinc/nginx-unprivileged:alpine3.20-perl
 
 # copy in nginx conf to serve the site for how we want it to
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -34,7 +34,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # to store nginx files
 COPY --from=build usr/src/app/dist/ /usr/share/nginx/html
 
-EXPOSE 80
+# due to unprivledged nginx we have to have port > 1000
+EXPOSE 8080
 
 # start app
 CMD ["npm", "run", "dev"]
